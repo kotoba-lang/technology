@@ -1,0 +1,79 @@
+{:kotoba.registry/id :kotoba/technology
+ :kotoba.registry/version 1
+ :kotoba.registry/updated "2026-06-30"
+ :technologies
+ [{:id :eda
+   :name "Electronic Design Automation"
+   :layer :engineering/design-automation
+   :capabilities #{:design/electronics :verification/formal :simulation/circuit :manufacturing/pcb}
+   :repos ["https://github.com/kotoba-lang/eda"]
+   :contracts [:netlist :constraint-set :verification-report :manufacturing-package]
+   :operational-risk :high}
+  {:id :cfd
+   :name "Computational Fluid Dynamics"
+   :layer :engineering/simulation
+   :capabilities #{:simulation/flow :simulation/thermal :simulation/drag :evidence/field-result}
+   :repos ["https://github.com/kotoba-lang/aero"
+           "https://github.com/kotoba-lang/cae-solver"]
+   :contracts [:case-edn :solver-kind :field-result :datom-evidence]
+   :operational-risk :medium}
+  {:id :cae
+   :name "Computer-Aided Engineering Contract"
+   :layer :engineering/simulation
+   :capabilities #{:simulation/dispatch :verification/engineering :evidence/simulation}
+   :repos ["https://github.com/kotoba-lang/cae-solver"
+           "https://github.com/kotoba-lang/aero"
+           "https://github.com/kotoba-lang/echem"
+           "https://github.com/kotoba-lang/motor"]
+   :contracts [:solve :solver-kind :case-edn :result-edn]
+   :operational-risk :medium}
+  {:id :bpmn
+   :name "Business Process Model and Notation"
+   :layer :workflow/process
+   :capabilities #{:workflow/process :workflow/human-task :workflow/escalation}
+   :repos ["https://github.com/kotoba-lang/bpmn"]
+   :contracts [:process-definition :task-definition :incident]
+   :operational-risk :medium}
+  {:id :dmn
+   :name "Decision Model and Notation"
+   :layer :policy/decision
+   :capabilities #{:policy/decision-table :policy/governor :policy/explain}
+   :repos ["https://github.com/kotoba-lang/dmn"]
+   :contracts [:decision-table :verdict :explanation]
+   :operational-risk :high}
+  {:id :identity
+   :name "Identity, Consent and Authorization"
+   :layer :trust/identity
+   :capabilities #{:identity/did :identity/authn :consent/record :authz/rbac}
+   :repos ["https://github.com/kotoba-lang/authenticator"
+           "https://github.com/kotoba-lang/cacao"]
+   :contracts [:did :capability :consent-record :rbac-context]
+   :operational-risk :high}
+  {:id :telemetry
+   :name "Telemetry and Event Ingestion"
+   :layer :data/ingestion
+   :capabilities #{:data/sensor :data/meter :data/event :evidence/provenance}
+   :repos ["https://github.com/kotoba-lang/datom"]
+   :contracts [:observation :source :timestamp :provenance]
+   :operational-risk :medium}
+  {:id :audit-ledger
+   :name "Append-only Audit Ledger"
+   :layer :trust/evidence
+   :capabilities #{:audit/append :audit/export :evidence/proof-bundle}
+   :repos ["https://github.com/kotoba-lang/datom"]
+   :contracts [:datom-log :proof-bundle :audit-export]
+   :operational-risk :high}
+  {:id :optimization
+   :name "Planning, Routing and Allocation"
+   :layer :optimization/planning
+   :capabilities #{:optimization/routing :optimization/scheduling :optimization/allocation}
+   :repos ["https://github.com/kotoba-lang/cron"]
+   :contracts [:objective :constraint :plan :schedule]
+   :operational-risk :medium}
+  {:id :forms
+   :name "Forms and Structured Intake"
+   :layer :human/intake
+   :capabilities #{:human/intake :data/validation :consent/capture}
+   :repos ["https://github.com/kotoba-lang/forms"]
+   :contracts [:form-schema :submission :validation-result]
+   :operational-risk :low}]}
