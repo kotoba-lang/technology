@@ -90,4 +90,11 @@
    :capabilities #{:finance/account :finance/iban :finance/ledger :finance/clearing}
    :repos ["https://github.com/kotoba-lang/banking"]
    :contracts [:iban :account :ledger-posting :clearing-batch]
-   :operational-risk :high}]}
+   :operational-risk :high}
+  {:id :phone
+   :name "Telephony Numbering, SIP and Call Records"
+   :layer :communication/telephony
+   :capabilities #{:telephony/e164 :telephony/sip :telephony/cdr :telephony/sms}
+   :repos ["https://github.com/kotoba-lang/phone"]
+   :contracts [:e164-number :sip-uri :cdr-record :sms-message]
+   :operational-risk :medium}]}
