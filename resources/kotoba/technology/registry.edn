@@ -97,4 +97,11 @@
    :capabilities #{:telephony/e164 :telephony/sip :telephony/cdr :telephony/sms}
    :repos ["https://github.com/kotoba-lang/phone"]
    :contracts [:e164-number :sip-uri :cdr-record :sms-message]
-   :operational-risk :medium}]}
+   :operational-risk :medium}
+  {:id :card
+   :name "Card Payments, ISO 8583 and Authorization"
+   :layer :finance/card-payments
+   :capabilities #{:finance/pan :finance/iso-8583 :finance/authorization :finance/network-routing}
+   :repos ["https://github.com/kotoba-lang/card"]
+   :contracts [:pan :iso8583-message :authorization :card-network]
+   :operational-risk :high}]}
