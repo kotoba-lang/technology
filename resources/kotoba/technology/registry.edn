@@ -104,4 +104,25 @@
    :capabilities #{:finance/pan :finance/iso-8583 :finance/authorization :finance/network-routing}
    :repos ["https://github.com/kotoba-lang/card"]
    :contracts [:pan :iso8583-message :authorization :card-network]
-   :operational-risk :high}]}
+   :operational-risk :high}
+  {:id :retail
+   :name "Retail SKUs, Barcodes and Point of Sale"
+   :layer :commerce/retail
+   :capabilities #{:commerce/sku :commerce/ean13 :commerce/pos :commerce/inventory}
+   :repos ["https://github.com/kotoba-lang/retail"]
+   :contracts [:sku :ean13 :receipt :inventory-record]
+   :operational-risk :medium}
+  {:id :logistics
+   :name "Shipments, Tracking and Freight"
+   :layer :commerce/logistics
+   :capabilities #{:commerce/shipment :commerce/tracking :commerce/route :commerce/freight}
+   :repos ["https://github.com/kotoba-lang/logistics"]
+   :contracts [:shipment :tracking-number :route-leg :consignment]
+   :operational-risk :medium}
+  {:id :property
+   :name "Parcels, Listings and Leases"
+   :layer :property/real-estate
+   :capabilities #{:property/parcel :property/listing :property/lease :property/term-conflict}
+   :repos ["https://github.com/kotoba-lang/property"]
+   :contracts [:parcel :listing :lease :term-overlap]
+   :operational-risk :medium}]}
