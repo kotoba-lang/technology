@@ -83,6 +83,8 @@
    :capabilities #{:finance/bic :finance/swift-mt :finance/iso-20022 :finance/validation}
    :repos ["https://github.com/kotoba-lang/swift"]
    :contracts [:bic :swift-message :iso20022-envelope :validation-result]
+   :ui? true
+   :export? true
    :operational-risk :high}
   {:id :banking
    :name "Banking Accounts, Ledger and Clearing"
@@ -90,6 +92,8 @@
    :capabilities #{:finance/account :finance/iban :finance/ledger :finance/clearing}
    :repos ["https://github.com/kotoba-lang/banking"]
    :contracts [:iban :account :ledger-posting :clearing-batch]
+   :ui? true
+   :export? true
    :operational-risk :high}
   {:id :phone
    :name "Telephony Numbering, SIP and Call Records"
@@ -97,6 +101,8 @@
    :capabilities #{:telephony/e164 :telephony/sip :telephony/cdr :telephony/sms}
    :repos ["https://github.com/kotoba-lang/phone"]
    :contracts [:e164-number :sip-uri :cdr-record :sms-message]
+   :ui? true
+   :export? true
    :operational-risk :medium}
   {:id :card
    :name "Card Payments, ISO 8583 and Authorization"
@@ -104,6 +110,8 @@
    :capabilities #{:finance/pan :finance/iso-8583 :finance/authorization :finance/network-routing}
    :repos ["https://github.com/kotoba-lang/card"]
    :contracts [:pan :iso8583-message :authorization :card-network]
+   :ui? true
+   :export? true
    :operational-risk :high}
   {:id :retail
    :name "Retail SKUs, Barcodes and Point of Sale"
@@ -111,6 +119,8 @@
    :capabilities #{:commerce/sku :commerce/ean13 :commerce/pos :commerce/inventory}
    :repos ["https://github.com/kotoba-lang/retail"]
    :contracts [:sku :ean13 :receipt :inventory-record]
+   :ui? true
+   :export? true
    :operational-risk :medium}
   {:id :logistics
    :name "Shipments, Tracking and Freight"
@@ -118,6 +128,8 @@
    :capabilities #{:commerce/shipment :commerce/tracking :commerce/route :commerce/freight}
    :repos ["https://github.com/kotoba-lang/logistics"]
    :contracts [:shipment :tracking-number :route-leg :consignment]
+   :ui? true
+   :export? true
    :operational-risk :medium}
   {:id :property
    :name "Parcels, Listings and Leases"
@@ -125,6 +137,8 @@
    :capabilities #{:property/parcel :property/listing :property/lease :property/term-conflict}
    :repos ["https://github.com/kotoba-lang/property"]
    :contracts [:parcel :listing :lease :term-overlap]
+   :ui? true
+   :export? true
    :operational-risk :medium}
   {:id :labor
    :name "Employment Contracts, Timesheets and Payroll"
@@ -132,6 +146,8 @@
    :capabilities #{:work/contract :work/timesheet :work/wage :work/payroll}
    :repos ["https://github.com/kotoba-lang/labor"]
    :contracts [:employment-contract :timesheet :wage-calculation :payroll-record]
+   :ui? true
+   :export? true
    :operational-risk :high}
   {:id :robotics
    :name "Robot Missions, Actions and Safety"
@@ -139,4 +155,6 @@
    :capabilities #{:robotics/mission :robotics/action :robotics/safety-stop :robotics/telemetry-proof}
    :repos ["https://github.com/kotoba-lang/robotics"]
    :contracts [:mission :action :safety-stop :telemetry-proof]
+   :ui? true
+   :export? true
    :operational-risk :high}]}
