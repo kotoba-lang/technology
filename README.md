@@ -46,3 +46,9 @@ Each technology entry declares:
 
 `kotoba-lang/industry` maps ISIC-coded businesses to required technology IDs.
 `cloud-itonami` reads that mapping to show what a business can actually run.
+
+## Test
+
+```bash
+clojure -M:test
+```
