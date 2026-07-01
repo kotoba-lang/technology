@@ -125,4 +125,18 @@
    :capabilities #{:property/parcel :property/listing :property/lease :property/term-conflict}
    :repos ["https://github.com/kotoba-lang/property"]
    :contracts [:parcel :listing :lease :term-overlap]
-   :operational-risk :medium}]}
+   :operational-risk :medium}
+  {:id :labor
+   :name "Employment Contracts, Timesheets and Payroll"
+   :layer :work/employment
+   :capabilities #{:work/contract :work/timesheet :work/wage :work/payroll}
+   :repos ["https://github.com/kotoba-lang/labor"]
+   :contracts [:employment-contract :timesheet :wage-calculation :payroll-record]
+   :operational-risk :high}
+  {:id :robotics
+   :name "Robot Missions, Actions and Safety"
+   :layer :robotics/control
+   :capabilities #{:robotics/mission :robotics/action :robotics/safety-stop :robotics/telemetry-proof}
+   :repos ["https://github.com/kotoba-lang/robotics"]
+   :contracts [:mission :action :safety-stop :telemetry-proof]
+   :operational-risk :high}]}
