@@ -1,6 +1,6 @@
 {:kotoba.registry/id :kotoba/technology
  :kotoba.registry/version 1
- :kotoba.registry/updated "2026-06-30"
+ :kotoba.registry/updated "2026-07-03"
  :technologies
  [{:id :eda
    :name "Electronic Design Automation"
@@ -146,6 +146,15 @@
    :capabilities #{:work/contract :work/timesheet :work/wage :work/payroll}
    :repos ["https://github.com/kotoba-lang/labor"]
    :contracts [:employment-contract :timesheet :wage-calculation :payroll-record]
+   :ui? true
+   :export? true
+   :operational-risk :high}
+  {:id :insurance
+   :name "Policies, Premiums and Claims"
+   :layer :finance/insurance
+   :capabilities #{:insurance/policy :insurance/premium :insurance/claim :insurance/underwriting-decision}
+   :repos ["https://github.com/kotoba-lang/insurance"]
+   :contracts [:policy :premium-quote :claim :underwriting-decision]
    :ui? true
    :export? true
    :operational-risk :high}
