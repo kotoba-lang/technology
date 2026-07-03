@@ -158,6 +158,15 @@
    :ui? true
    :export? true
    :operational-risk :high}
+  {:id :securities
+   :name "Positions, Trades and Fund Shares"
+   :layer :finance/securities
+   :capabilities #{:securities/position :securities/trade :securities/fund-nav :securities/mandate}
+   :repos ["https://github.com/kotoba-lang/securities"]
+   :contracts [:position :trade :fund-nav :mandate]
+   :ui? true
+   :export? true
+   :operational-risk :high}
   {:id :robotics
    :name "Robot Missions, Actions and Safety"
    :layer :robotics/control
