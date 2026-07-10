@@ -175,4 +175,11 @@
    :contracts [:mission :action :safety-stop :telemetry-proof]
    :ui? true
    :export? true
-   :operational-risk :high}]}
+   :operational-risk :high}
+  {:id :ontology
+   :name "Object-Type and Connector Provenance Registry"
+   :layer :data/integration
+   :capabilities #{:data/object-type :data/connector-registry :evidence/provenance}
+   :repos ["https://github.com/kotoba-lang/ontology"]
+   :contracts [:object-type :connector :ontology-tag]
+   :operational-risk :low}]}
