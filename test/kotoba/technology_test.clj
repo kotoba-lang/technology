@@ -23,3 +23,17 @@
                                     [:simulation/flow :audit/export]))
   (is (not (tech/satisfies-capabilities? [:forms]
                                          [:simulation/flow]))))
+
+(deftest resolve-stack-partitions-instead-of-throwing
+  (testing "known ids resolve to records, exactly as `stack` returns them"
+    (let [{:keys [resolved unknown]} (tech/resolve-stack [:telemetry :dmn])]
+      (is (= [:telemetry :dmn] (mapv :id resolved)))
+      (is (= [] unknown))))
+  (testing "an id this registry does not provide is REPORTED, not thrown"
+    (let [{:keys [resolved unknown]} (tech/resolve-stack [:telemetry :no-such-technology :dmn])]
+      (is (= [:telemetry :dmn] (mapv :id resolved)) "order of what does resolve is preserved")
+      (is (= [:no-such-technology] unknown))))
+  (testing "`stack` stays strict -- a caller asking for a set wants all of it"
+    (is (thrown? clojure.lang.ExceptionInfo (tech/stack [:no-such-technology]))))
+  (testing "nothing known at all is still an answer, not an exception"
+    (is (= {:resolved [] :unknown [:a :b]} (tech/resolve-stack [:a :b])))))
