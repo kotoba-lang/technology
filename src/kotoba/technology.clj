@@ -58,13 +58,38 @@
           (into {})))))
 
 (defn stack
-  "Return ordered technology records for ids."
+  "Return ordered technology records for ids. Throws on an id this
+  registry does not provide.
+
+  Strict on purpose: a caller asking for a specific set of technologies
+  and getting a shorter list back would silently proceed with less than
+  it asked for. Callers that are ASKING WHETHER a technology exists want
+  `resolve-stack` instead."
   ([ids] (stack (registry) ids))
   ([reg ids]
    (let [idx (by-id reg)]
      (mapv #(or (get idx %)
                 (throw (ex-info "unknown technology" {:id %})))
            ids))))
+
+(defn resolve-stack
+  "Partition `ids` into the technology records this registry provides and
+  the ids it does not.
+
+  `{:resolved [record ..] :unknown [id ..]}`.
+
+  This exists because a consumer registry naming a technology nobody has
+  built yet is a NORMAL state, not a programming error — it is a
+  backlog entry. `stack` throwing turned every such entry into an
+  exception that took down the whole query, so a caller could not even
+  ask what was missing. Measured 2026-08-03: 29 of the 651 industries in
+  `kotoba-lang/industry` named at least one technology absent from here,
+  and `execution-plan` was unusable for every one of them."
+  ([ids] (resolve-stack (registry) ids))
+  ([reg ids]
+   (let [idx (by-id reg)]
+     {:resolved (into [] (keep idx) ids)
+      :unknown  (into [] (remove idx) ids)})))
 
 (defn satisfies-capabilities?
   ([ids capabilities] (satisfies-capabilities? (registry) ids capabilities))
