@@ -1,0 +1,22 @@
+#!/usr/bin/env nbb
+;; The portable suite on nbb — no build step, no JVM.
+;;
+;; This file is the whole point of the `.cljc` conversion. Reader
+;; conditionals that are never evaluated under `:cljs` are not portability;
+;; they are the appearance of it, and a `:cljs` branch nothing runs is a
+;; check that cannot fail. Run it from the repo root, where the `:cljs`
+;; resource reader looks for `resources/`:
+;;
+;;   nbb --classpath src:test test/run_portable.cljs
+;;
+;; Every `deftest`-bearing portable namespace must be named BOTH in the
+;; require and in `run-tests`: requiring registers the vars, only
+;; `run-tests` runs them, and a runner naming a subset prints the same
+;; `Ran N tests` shape as one naming all of them.
+(require '[cljs.test :as t]
+         '[kotoba.technology-test])
+
+(defmethod t/report [:cljs.test/default :end-run-tests] [m]
+  (when-not (t/successful? m) (set! (.-exitCode js/process) 1)))
+
+(t/run-tests 'kotoba.technology-test)

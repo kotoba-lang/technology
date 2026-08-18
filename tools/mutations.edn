@@ -1,0 +1,60 @@
+;; One mutation per invariant. `:find` must occur EXACTLY ONCE in `:file` —
+;; `tools/mutate.cljs` refuses otherwise, because a mutation that landed in a
+;; comment or a second call site produces a red suite that proves nothing.
+;;
+;; ## SCOPE
+;;
+;; Covers the 2026-08-18 `.clj` → `.cljc` conversion: that an unreadable
+;; registry answers nil rather than an empty collection, at every level it
+;; could flatten into one. It does NOT cover `stack` / `resolve-stack`
+;; ordering, capability matching, or the registry's tx-data reconstitution —
+;; those have tests but no mutations here, so a clean run of this table means
+;; "the portability invariants are measured" and NOT "this library is
+;; measured".
+;;
+;; ⚠ These mutations run `clojure -M:test`, the JVM suite. The `:cljs` branch
+;; is exercised by `test/run_portable.cljs`, which this harness does not
+;; drive — so a mutation that only broke the cljs reader branch would survive
+;; here. Run both before believing a green table.
+[{:id :unreadable-registry-is-nil
+  :invariant "a missing resource is nil, never an empty registry"
+  :file "src/kotoba/technology.cljc"
+  :find "  (when-let [txt (read-resource registry-resource)]"
+  :replace "  (let [txt (or (read-resource registry-resource) \"{}\")]"}
+
+ {:id :by-id-does-not-invent-an-empty-index
+  :invariant "(into {} …) over nil yields {} — the flattening this prevents"
+  :file "src/kotoba/technology.cljc"
+  :find "  ([reg] (when-let [ts (technologies reg)]\n           (into {} (map (juxt :id identity)) ts))))"
+  :replace "  ([reg] (into {} (map (juxt :id identity)) (technologies reg))))"}
+
+ {:id :capability-map-does-not-invent-an-empty-answer
+  :invariant "no capabilities and no registry are different findings"
+  :file "src/kotoba/technology.cljc"
+  :find "   (when-let [ts (technologies reg)]\n     (let [wanted (set capabilities)]"
+  :replace "   (let [ts (technologies reg)]\n     (let [wanted (set capabilities)]"}
+
+ ;; A seventh was written and REMOVED, with the reason, because deleting one
+ ;; to make a table clean is what this harness exists to prevent:
+ ;;
+ ;;   :technologies-reads-the-registry-given-to-it — replacing
+ ;;   `([] (technologies (registry)))` with `([] (:technologies (registry)))`
+ ;;   reddened nothing, and it is a semantic no-op: the one-arg body IS
+ ;;   `(:technologies reg)`, so the two forms are identical for every input
+ ;;   including nil. The change was still worth making (one path instead of
+ ;;   two, so a future guard added to the one-arg form cannot be skipped by
+ ;;   the zero-arg one) but it is not an invariant anything can observe
+ ;;   today, and claiming it as one would be the same overreach as a green
+ ;;   check that never ran.
+
+ {:id :readable?-actually-asks
+  :invariant "readable? is false when the resource could not be read"
+  :file "src/kotoba/technology.cljc"
+  :find "  (some? (registry)))"
+  :replace "  true)"}
+
+ {:id :the-resource-reader-reports-failure
+  :invariant "a read that failed returns nil rather than a plausible string"
+  :file "src/kotoba/technology.cljc"
+  :find "  #?(:clj (some-> (io/resource path) slurp)"
+  :replace "  #?(:clj (or (some-> (io/resource path) slurp) \"{}\")"}]
