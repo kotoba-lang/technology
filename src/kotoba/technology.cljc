@@ -10,40 +10,25 @@
   the JVM last. A registry of facts has no business being the thing that
   pins a consumer to a runtime.
 
-  ## Reading the resource, and saying when it could not be read
+  ## No runtime file access at all
 
-  There is no portable `io/resource`. Under `:clj` this reads the classpath
-  resource; under `:cljs` it reads the file from disk relative to the
-  process's working directory, which works under nbb and Node and does not
-  work in a browser.
+  There is no portable `io/resource`, and the obvious `:cljs` substitute —
+  reading `resources/<path>` relative to the working directory — is right
+  only while this library is the root project. The registry is therefore
+  compiled in, as the generated `kotoba.technology.embedded`, projected from
+  `resources/kotoba/technology/registry.edn` by `tools/gen-embedded.cljs`.
+  The EDN stays the thing a human edits; the projection is what the code
+  reads; `--check` refuses to let them drift.
 
-  **`registry` returns nil when the resource could not be read, and never an
-  empty registry.** A caller must be able to tell *there are no
-  technologies* from *nobody could look* — `technologies` therefore also
-  answers nil rather than `[]`, and `readable?` is the direct question. An
-  empty vector here would make a missing file indistinguishable from an
-  empty registry, which is this workspace's most-repeated defect."
-  (:require #?(:clj [clojure.edn :as edn] :cljs [cljs.reader :as edn])
-            [clojure.set :as set]
-            #?(:clj [clojure.java.io :as io])))
+  **A registry handed in as nil still propagates as nil**, and that has not
+  changed: `(into {} …)` over nil yields `{}`, so `by-id` would answer an
+  empty index and `get-technology` nil for every id — a caller passing
+  nothing must not receive a complete-looking lookup over no data."
+  (:require [clojure.set :as set]
+            [kotoba.technology.embedded :as embedded]))
 
 (def registry-resource "kotoba/technology/registry.edn")
 
-(defn- read-resource
-  "The resource's text, or nil when it could not be read.
-
-  nil is a real answer here and is propagated rather than swallowed."
-  [path]
-  #?(:clj (some-> (io/resource path) slurp)
-     :cljs (try (.readFileSync (js/require "fs") (str "resources/" path) "utf8")
-                (catch :default _ nil))))
-
-;; registry.edn is stored on disk as Datomic/Datascript tx-data (a vector of
-;; entity maps, root entity first, one entity per technology referenced by
-;; :db/id via :kotoba.registry/technologies) so it stays directly transactable
-;; and queryable. `registry` reconstitutes the original bare-keyed shape
-;; ({:kotoba.registry/id ... :technologies [{:id ... :name ...} ...]}) from
-;; that tx-data so every downstream function below keeps working unchanged.
 (defn- tx-data? [content]
   (and (vector? content) (seq content) (map? (first content)) (contains? (first content) :db/id)))
 
@@ -60,25 +45,36 @@
         (assoc :technologies technologies))))
 
 (defn registry
-  "Load the technology registry, or **nil** when the resource could not be
-  read.
+  "The technology registry.
 
-  nil is not an empty registry. Under `:cljs` the resource is read relative
-  to the working directory, so a caller running from elsewhere gets nil —
-  and must be able to tell that from a registry that genuinely lists
-  nothing."
-  []
-  (when-let [txt (read-resource registry-resource)]
-    (let [content (edn/read-string txt)]
-      (if (tx-data? content)
-        (reconstitute-registry content)
-        content))))
+  Reads `kotoba.technology.embedded`, a GENERATED projection of
+  `resources/kotoba/technology/registry.edn`, and touches no file at
+  runtime.
 
-(defn readable?
-  "Could the registry be read at all? The direct form of the question the
-  nils below answer indirectly."
+  ## Why not read the resource
+
+  It did, until 2026-08-18, through a `:cljs` branch that read
+  `resources/<path>` relative to the PROCESS's working directory. That is
+  right when this library is the root project and wrong the moment it is a
+  dependency — measured the same day: `kotoba.iso3166`'s suite under nbb
+  produced **159 errors**, every one of them this registry coming back nil
+  because nbb's cwd was iso3166's root and not this one. A portability fix
+  that only works when you are the root is not one.
+
+  So there is no read, and therefore no read that can fail. The `nil`
+  discipline that guarded the old path is gone with the path — keeping a
+  `readable?` that can only answer true would be a check with no failure
+  mode. What replaced it is `tools/gen-embedded.cljs --check`, which guards
+  the failure mode that now exists: the projection drifting from the EDN a
+  human edits. `the-embedded-registry-matches-the-edn` asserts it in the
+  suite too, and **fails rather than passes when it cannot read the EDN** —
+  a check that could not run must not report what a check that ran and
+  found nothing reports."
   []
-  (some? (registry)))
+  (let [content embedded/registry-tx]
+    (if (tx-data? content)
+      (reconstitute-registry content)
+      content)))
 
 (defn technologies
   ([] (technologies (registry)))

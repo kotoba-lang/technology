@@ -1,6 +1,7 @@
 (ns kotoba.technology-test
   (:require [clojure.test :refer [deftest is testing]]
-            [kotoba.technology :as tech]))
+            [kotoba.technology :as tech]
+            [kotoba.technology.embedded :as embedded]))
 
 (deftest registry-loads
   (let [reg (tech/registry)]
@@ -43,42 +44,56 @@
   (testing "nothing known at all is still an answer, not an exception"
     (is (= {:resolved [] :unknown [:a :b]} (tech/resolve-stack [:a :b])))))
 
+
 ;; ---------------------------------------------------------------------------
-;; Portability, and the nil that means `nobody could look`
+;; Portability: no runtime file access, and a projection that cannot drift
 ;;
-;; This namespace was `.clj` until 2026-08-18, and one line made it so:
-;; `(slurp (io/resource …))`. Through it `kotoba.iso3166` was JVM-only too,
-;; and so was anything that wanted either. The workspace's runtime order puts
-;; the JVM last, so a registry of facts pinning its consumers to it was the
-;; wrong way round.
+;; This namespace was `.clj` until 2026-08-18 — `(slurp (io/resource …))` —
+;; and through it `kotoba.iso3166`, which requires this, and everything that
+;; wanted either. The first fix was a `:cljs` branch reading `resources/`
+;; relative to the working directory. **That was wrong and was measured
+;; wrong the same day**: iso3166's suite under nbb produced 159 errors,
+;; every one this registry coming back nil because nbb's cwd was iso3166's
+;; root. A portability fix that works only while you are the root project is
+;; not one.
 ;;
-;; The conversion's risk is not that the reader conditional is missing — it is
-;; that the `:cljs` branch is never evaluated. `test/run_portable.cljs` runs
-;; this file under nbb for exactly that reason.
+;; So the registry is compiled in. There is no read, so there is no read that
+;; can fail, so the `nil-means-nobody-could-look` tests that guarded the old
+;; path are gone with the path — keeping them would have been a check with no
+;; failure mode. What is tested instead is the failure mode that now exists:
+;; the generated projection drifting from the EDN a human edits.
 ;; ---------------------------------------------------------------------------
 
-(deftest an-unreadable-registry-is-nil-and-not-empty
-  (testing "a caller must be able to tell `there are no technologies` from
-            `nobody could look`. An empty vector would make a missing file
-            indistinguishable from an empty registry, which is the defect
-            this workspace has found in fourteen places"
-    (with-redefs [tech/registry (constantly nil)]
-      (is (nil? (tech/technologies)) "nil, not []")
-      (testing "and nothing downstream invents an empty answer. `(into {} …)`
-                over nil yields `{}`, so an unreadable registry would index
-                to an empty map, `get-technology` would answer nil for every
-                id, and `capability-map` would report no capabilities — three
-                plausible answers all meaning only that a file was missing"
-        (is (nil? (tech/by-id)))
-        (is (nil? (tech/capability-map [:anything])))
-        (is (nil? (tech/get-technology :anything))))
-      (is (false? (tech/readable?))))))
+(deftest the-embedded-registry-matches-the-edn
+  (testing "the EDN is the source of truth and the namespace is a projection
+            of it. Two copies that can silently disagree are worse than one
+            copy in the wrong format, so this asserts they agree — and
+            **fails rather than passes when it cannot read the EDN**, because
+            a check that could not run must not report what a check that ran
+            and found nothing reports"
+    (let [txt #?(:clj (try (slurp "resources/kotoba/technology/registry.edn")
+                           (catch Exception _ nil))
+                 :cljs (try (.readFileSync (js/require "fs")
+                                           "resources/kotoba/technology/registry.edn" "utf8")
+                            (catch :default _ nil)))]
+      (is (some? txt)
+          "could not read the EDN — run from the repo root. This is a
+           FAILURE and not a skip, on purpose")
+      (when txt
+        (is (= (#?(:clj clojure.edn/read-string :cljs cljs.reader/read-string) txt)
+               embedded/registry-tx))))))
 
-(deftest the-registry-is-actually-readable-here
-  (testing "the negative test above is only meaningful if the positive one
-            passes — otherwise `nil` would be the answer in both cases and
-            neither would be measuring anything"
-    (is (true? (tech/readable?)))
+(deftest a-registry-handed-in-as-nil-does-not-flatten
+  (testing "`(into {} …)` over nil yields `{}`, so a caller passing nothing
+            would receive a complete-looking lookup over no data: `by-id` an
+            empty index, `get-technology` nil for every id, `capability-map`
+            no capabilities. Three plausible answers, all meaning only that
+            the caller passed nil"
+    (is (nil? (tech/technologies nil)))
+    (is (nil? (tech/by-id nil)))
+    (is (nil? (tech/capability-map nil [:anything])))
+    (is (nil? (tech/get-technology nil :anything))))
+  (testing "and the real registry is not nil, or the above measured nothing"
     (is (seq (tech/technologies)))))
 
 (deftest technologies-reads-the-registry-it-was-given
@@ -87,17 +102,3 @@
             and passing nothing took different paths"
     (let [reg (tech/registry)]
       (is (= (tech/technologies reg) (tech/technologies))))))
-
-(deftest the-real-read-path-fails-to-nil-not-to-a-plausible-value
-  (testing "the test above redefines `registry`, which BYPASSES the resource
-            reader entirely — so it measures what `registry` does with a nil
-            and never that a failed read produces one. Three mutations
-            survived on exactly that gap. Pointing `registry-resource` at a
-            path that is not there exercises the reader itself, under both
-            runtimes: `:clj` gets no classpath resource, `:cljs` gets an
-            fs error it catches"
-    (with-redefs [tech/registry-resource "kotoba/technology/no-such-file.edn"]
-      (is (nil? (tech/registry)))
-      (is (false? (tech/readable?)))
-      (is (nil? (tech/technologies)))
-      (is (nil? (tech/by-id))))))

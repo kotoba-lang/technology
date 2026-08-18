@@ -4,23 +4,45 @@
 ;;
 ;; ## SCOPE
 ;;
-;; Covers the 2026-08-18 `.clj` → `.cljc` conversion: that an unreadable
-;; registry answers nil rather than an empty collection, at every level it
-;; could flatten into one. It does NOT cover `stack` / `resolve-stack`
-;; ordering, capability matching, or the registry's tx-data reconstitution —
-;; those have tests but no mutations here, so a clean run of this table means
-;; "the portability invariants are measured" and NOT "this library is
-;; measured".
+;; Covers the 2026-08-18 `.clj` → `.cljc` conversion: that the registry is
+;; compiled in rather than read at runtime, that the generated projection
+;; cannot drift from the EDN unnoticed, and that a registry handed in as nil
+;; does not flatten into a complete-looking empty lookup. It does NOT cover
+;; `stack` / `resolve-stack` ordering, capability matching, or the tx-data
+;; reconstitution — those have tests but no mutations here, so a clean run of
+;; this table means "the portability invariants are measured" and NOT "this
+;; library is measured".
 ;;
-;; ⚠ These mutations run `clojure -M:test`, the JVM suite. The `:cljs` branch
-;; is exercised by `test/run_portable.cljs`, which this harness does not
-;; drive — so a mutation that only broke the cljs reader branch would survive
-;; here. Run both before believing a green table.
-[{:id :unreadable-registry-is-nil
-  :invariant "a missing resource is nil, never an empty registry"
-  :file "src/kotoba/technology.cljc"
-  :find "  (when-let [txt (read-resource registry-resource)]"
-  :replace "  (let [txt (or (read-resource registry-resource) \"{}\")]"}
+;; ⚠ These mutations run `clojure -M:test`. The `:cljs` half is exercised by
+;; `test/run_portable.cljs`, which this harness does not drive — a mutation
+;; breaking only a cljs branch would survive here. Run both.
+;;
+;; An earlier version of this table had three mutations on a runtime resource
+;; reader (`read-resource`, `readable?`, and a nil-registry guard). They are
+;; gone because the code is: reading `resources/` relative to the working
+;; directory worked only while this library was the root project, and
+;; measurably failed the moment iso3166 depended on it (159 errors). Their
+;; invariant — "nil means nobody could look" — has no failure mode once there
+;; is no read, and a mutation with no failure mode is theatre. What replaced
+;; them is the drift check, which is the failure mode that now exists.
+[{:id :the-projection-cannot-drift-unnoticed
+  :invariant "the generated namespace matches the EDN a human edits"
+  :file "src/kotoba/technology/embedded.cljc"
+  :find ":kotoba.technology/id :eda"
+  :replace ":kotoba.technology/id :eda-DRIFTED"}
+
+ ;; ⚠ The first version of this mutation pointed at the `:cljs` branch's
+ ;; path string and SURVIVED — which is not a test gap but a live
+ ;; demonstration of the caveat in this header: `nbb tools/mutate.cljs`
+ ;; drives `clojure -M:test`, so under `:clj` the other branch read the real
+ ;; file and nothing changed. It is retargeted at the `:clj` branch, and the
+ ;; survival is recorded rather than quietly fixed, because the warning above
+ ;; is now evidence instead of a claim.
+ {:id :the-drift-check-refuses-when-it-cannot-read
+  :invariant "a check that could not run must not report a pass"
+  :file "test/kotoba/technology_test.cljc"
+  :find "(try (slurp \"resources/kotoba/technology/registry.edn\")"
+  :replace "(try (slurp \"resources/kotoba/technology/no-such.edn\")"}
 
  {:id :by-id-does-not-invent-an-empty-index
   :invariant "(into {} …) over nil yields {} — the flattening this prevents"
@@ -34,27 +56,8 @@
   :find "   (when-let [ts (technologies reg)]\n     (let [wanted (set capabilities)]"
   :replace "   (let [ts (technologies reg)]\n     (let [wanted (set capabilities)]"}
 
- ;; A seventh was written and REMOVED, with the reason, because deleting one
- ;; to make a table clean is what this harness exists to prevent:
- ;;
- ;;   :technologies-reads-the-registry-given-to-it — replacing
- ;;   `([] (technologies (registry)))` with `([] (:technologies (registry)))`
- ;;   reddened nothing, and it is a semantic no-op: the one-arg body IS
- ;;   `(:technologies reg)`, so the two forms are identical for every input
- ;;   including nil. The change was still worth making (one path instead of
- ;;   two, so a future guard added to the one-arg form cannot be skipped by
- ;;   the zero-arg one) but it is not an invariant anything can observe
- ;;   today, and claiming it as one would be the same overreach as a green
- ;;   check that never ran.
-
- {:id :readable?-actually-asks
-  :invariant "readable? is false when the resource could not be read"
+ {:id :the-registry-is-actually-the-embedded-one
+  :invariant "the library reads the projection and not something else"
   :file "src/kotoba/technology.cljc"
-  :find "  (some? (registry)))"
-  :replace "  true)"}
-
- {:id :the-resource-reader-reports-failure
-  :invariant "a read that failed returns nil rather than a plausible string"
-  :file "src/kotoba/technology.cljc"
-  :find "  #?(:clj (some-> (io/resource path) slurp)"
-  :replace "  #?(:clj (or (some-> (io/resource path) slurp) \"{}\")"}]
+  :find "  (let [content embedded/registry-tx]"
+  :replace "  (let [content []]"}]
