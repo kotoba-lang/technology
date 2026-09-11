@@ -16,7 +16,7 @@
   reading `resources/<path>` relative to the working directory — is right
   only while this library is the root project. The registry is therefore
   compiled in, as the generated `kotoba.technology.embedded`, projected from
-  `resources/kotoba/technology/registry.edn` by `tools/gen-embedded.cljs`.
+  `resources/kotoba/technology/registry.edn` by `tools/gen-embedded.cljk`.
   The EDN stays the thing a human edits; the projection is what the code
   reads; `--check` refuses to let them drift.
 
@@ -64,7 +64,7 @@
   So there is no read, and therefore no read that can fail. The `nil`
   discipline that guarded the old path is gone with the path — keeping a
   `readable?` that can only answer true would be a check with no failure
-  mode. What replaced it is `tools/gen-embedded.cljs --check`, which guards
+  mode. What replaced it is `tools/gen-embedded.cljk --check`, which guards
   the failure mode that now exists: the projection drifting from the EDN a
   human edits. `the-embedded-registry-matches-the-edn` asserts it in the
   suite too, and **fails rather than passes when it cannot read the EDN** —
