@@ -7,7 +7,7 @@
 ;; check that cannot fail. Run it from the repo root, where the `:cljs`
 ;; resource reader looks for `resources/`:
 ;;
-;;   nbb --classpath src:test test/run_portable.cljs
+;;   nbb --classpath src:test test/run_portable.cljk
 ;;
 ;; Every `deftest`-bearing portable namespace must be named BOTH in the
 ;; require and in `run-tests`: requiring registers the vars, only

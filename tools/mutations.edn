@@ -1,5 +1,5 @@
 ;; One mutation per invariant. `:find` must occur EXACTLY ONCE in `:file` —
-;; `tools/mutate.cljs` refuses otherwise, because a mutation that landed in a
+;; `tools/mutate.cljk` refuses otherwise, because a mutation that landed in a
 ;; comment or a second call site produces a red suite that proves nothing.
 ;;
 ;; ## SCOPE
@@ -14,7 +14,7 @@
 ;; library is measured".
 ;;
 ;; ⚠ These mutations run `clojure -M:test`. The `:cljs` half is exercised by
-;; `test/run_portable.cljs`, which this harness does not drive — a mutation
+;; `test/run_portable.cljk`, which this harness does not drive — a mutation
 ;; breaking only a cljs branch would survive here. Run both.
 ;;
 ;; An earlier version of this table had three mutations on a runtime resource
@@ -27,37 +27,37 @@
 ;; them is the drift check, which is the failure mode that now exists.
 [{:id :the-projection-cannot-drift-unnoticed
   :invariant "the generated namespace matches the EDN a human edits"
-  :file "src/kotoba/technology/embedded.cljc"
+  :file "src/kotoba/technology/embedded.cljk"
   :find ":kotoba.technology/id :eda"
   :replace ":kotoba.technology/id :eda-DRIFTED"}
 
  ;; ⚠ The first version of this mutation pointed at the `:cljs` branch's
  ;; path string and SURVIVED — which is not a test gap but a live
- ;; demonstration of the caveat in this header: `nbb tools/mutate.cljs`
+ ;; demonstration of the caveat in this header: `nbb tools/mutate.cljk`
  ;; drives `clojure -M:test`, so under `:clj` the other branch read the real
  ;; file and nothing changed. It is retargeted at the `:clj` branch, and the
  ;; survival is recorded rather than quietly fixed, because the warning above
  ;; is now evidence instead of a claim.
  {:id :the-drift-check-refuses-when-it-cannot-read
   :invariant "a check that could not run must not report a pass"
-  :file "test/kotoba/technology_test.cljc"
+  :file "test/kotoba/technology_test.cljk"
   :find "(try (slurp \"resources/kotoba/technology/registry.edn\")"
   :replace "(try (slurp \"resources/kotoba/technology/no-such.edn\")"}
 
  {:id :by-id-does-not-invent-an-empty-index
   :invariant "(into {} …) over nil yields {} — the flattening this prevents"
-  :file "src/kotoba/technology.cljc"
+  :file "src/kotoba/technology.cljk"
   :find "  ([reg] (when-let [ts (technologies reg)]\n           (into {} (map (juxt :id identity)) ts))))"
   :replace "  ([reg] (into {} (map (juxt :id identity)) (technologies reg))))"}
 
  {:id :capability-map-does-not-invent-an-empty-answer
   :invariant "no capabilities and no registry are different findings"
-  :file "src/kotoba/technology.cljc"
+  :file "src/kotoba/technology.cljk"
   :find "   (when-let [ts (technologies reg)]\n     (let [wanted (set capabilities)]"
   :replace "   (let [ts (technologies reg)]\n     (let [wanted (set capabilities)]"}
 
  {:id :the-registry-is-actually-the-embedded-one
   :invariant "the library reads the projection and not something else"
-  :file "src/kotoba/technology.cljc"
+  :file "src/kotoba/technology.cljk"
   :find "  (let [content embedded/registry-tx]"
   :replace "  (let [content []]"}]
